@@ -1,3 +1,8 @@
+# Purpose: A program for finding out if given branches open or not.
+#
+# Author : Saji Bhaskaran
+
+
 import datetime
 
 
