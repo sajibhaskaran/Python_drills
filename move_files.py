@@ -20,8 +20,8 @@ def move_file(src,dest):
 
 
 def main():
-    src = "C:/Users/sajibhaskaran/Desktop/folderA/"
-    dest = "C:/Users/sajibhaskaran/Desktop/folderB/"
+    dest = "C:/Users/sajibhaskaran/Desktop/folderA/"
+    src = "C:/Users/sajibhaskaran/Desktop/folderB/"
     move_file(src,dest)
 
 if __name__ == "__main__":
