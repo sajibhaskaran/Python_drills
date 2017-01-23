@@ -1,3 +1,12 @@
+# Purpose: A Python program to figure out the files in a folder that are created
+#          or edited in the last 24 hours, and copy them to a destination folder.
+#
+#
+# Author : Saji Bhaskaran
+
+
+
+
 import os, shutil
 from datetime import datetime, timedelta
 
@@ -8,11 +17,11 @@ def modified_time(src, dest):
     for file in files:
         path = os.path.join(src, file)
         dst = os.path.join(dest, file)
-        print(path)
+        #print(path)
         m_time = os.path.getmtime(path)
-        if datetime.fromtimestamp(m_time)>time_24hours_ago:
+        if datetime.fromtimestamp(m_time) > time_24hours_ago:
             shutil.copy(path, dst)
-            print(dst)
+            #print(dst)
 
 
 
