@@ -55,8 +55,7 @@ def open_file(self):
     files = os.listdir(src_folder)
     # print(files)
     # Iterating through the files and lists ones that modified recently.
-    for file in files:
-        self.lst_origin.insert(END, file)
+    [self.lst_origin.insert(END, file) for file in files]
         
 
 def dest_file(self):
