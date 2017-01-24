@@ -13,13 +13,13 @@ from tkinter import *
 import tkinter as tk
 from tkinter import filedialog, font
 
-import files_gui
+import modified_files_gui
 
 
 class AppWindow:
     # This class sets up the main application window and a function to figure out
     # the center of the screen.
-    # files_gui.py got the rest of the functions for gui elements.
+    # modified_files_gui.py got the rest of the functions for gui elements.
     
     def __init__(self, master):
         helv36 = font.Font(family='Helvetica', size=36, weight='bold')
@@ -32,7 +32,7 @@ class AppWindow:
 
         self.center_window(500, 400)
 
-        files_gui.load_gui(self)
+        modified_files_gui.load_gui(self)
 
     def center_window(self, w, h):
 
