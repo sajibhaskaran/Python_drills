@@ -43,7 +43,8 @@ def open_file(self):
     # Sets up global variable so the filedialog doesn't need to be called
     # multiple times.
     global src_folder
-    self.lst_origin.delete(0, END)
+    #self.lst_origin.delete(0, END)
+    clear_box(self)
     src_folder = filedialog.askdirectory()
     if src_folder == '':
         messagebox.showwarning("Invalid Selection", "Please pick a valid directory.")
