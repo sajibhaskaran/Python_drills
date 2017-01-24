@@ -11,31 +11,15 @@ import os, shutil
 from datetime import datetime, timedelta
 from tkinter import *
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, font
+
 import files_gui
 
-def modified_time(src, dest):
-    # finding out the time 24 hours ago.
-    time_24hours_ago = datetime.today()-timedelta(hours = 24)
-    files = os.listdir(src)
-    
-    for file in files:
-        path = os.path.join(src, file)
-        dst = os.path.join(dest, file)
-        # print(path)
-
-        # getting the modified time of the file.
-        m_time = os.path.getmtime(path)
-
-        # checking if file is recently created or edited.
-        if datetime.fromtimestamp(m_time) > time_24hours_ago:
-            # copying the file.
-            shutil.copy(path, dst)
-            # print(dst)
 
 class AppWindow:
 
     def __init__(self, master):
+        helv36 = font.Font(family='Helvetica', size=36, weight='bold')
         self.master = master
         self.master.minsize(500, 400)
         self.master.maxsize(500, 400)
@@ -43,18 +27,22 @@ class AppWindow:
         self.master.title("Move Files")
         self.master.configure(bg = "silver")
 
-        files_gui.load_gui(self)
-        '''
-        tk.Button(master, text = "Open",
-                  command = self.open_file).grid(row = 1, column = 0)
-    
-    def open_file(self):
-        folder = filedialog.askdirectory()
-        files = os.listdir(folder)
-        print(files)
+        self.center_window(500, 400)
 
-        load_gui(self)
-        '''
+        files_gui.load_gui(self)
+
+    def center_window(self, w, h):
+
+        #function to figure out the center of the screen
+        screen_width = self.master.winfo_screenwidth()
+        screen_height = self.master.winfo_screenheight()
+
+        x = int((screen_width/2) - (w/2))
+        y = int((screen_height/2) - (h/2))
+
+        centerGeo = self.master.geometry('{}x{}+{}+{}'.format(w, h, x, y))
+        return centerGeo
+       
     
 
 

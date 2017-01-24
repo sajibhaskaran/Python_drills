@@ -4,7 +4,10 @@ from tkinter import *
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
+
+
 def load_gui(self):
+    
     self.lbl_origin = tk.Label(self.master, bg = "silver", text = "Origin directory: ")
     self.lbl_origin.grid( row = 0, column = 0, padx = (20, 0), pady = (10,0), sticky = N+W)
     self.lst_origin = Listbox(self.master, width = 40, height = 8)
@@ -23,6 +26,7 @@ def load_gui(self):
     self.btn_dest.grid( row = 1, column = 1, padx = (20,20), pady = (60,0), sticky = N+W)
     self.btn_copy = tk.Button(self.master, width = 25, height = 2, text = "Copy",
                               command = lambda: copy_file(self))
+    self.btn_copy.configure(state = DISABLED)
     self.btn_copy.grid( row = 1, column = 1, padx = (20,20), pady = (110,0), sticky = N+E)
     self.btn_open = tk.Button(self.master, width = 25, height = 2, text = "Clear",
                               command = lambda: clear_box(self))
@@ -35,7 +39,11 @@ def load_gui(self):
 
 def open_file(self):
     global src_folder
+    self.lst_origin.delete(0, END)
     src_folder = filedialog.askdirectory()
+    if src_folder == '':
+        messagebox.showwarning("Invalid Selection", "Please pick a valid directory.")
+        src_folder = filedialog.askdirectory()
     folder_name = get_folder(src_folder)
     or_text = "Origin directory: " + folder_name
     self.lbl_origin.configure(text = or_text)
@@ -47,11 +55,16 @@ def open_file(self):
 
 def dest_file(self):
     global dest_folder
+    
     dest_folder = filedialog.askdirectory()
+    if dest_folder == '':
+        messagebox.showwarning("Invalid Selection", "Please pick a valid directory.")
+        dest_folder = filedialog.askdirectory()
     
     folder_name = get_folder(dest_folder)
     dest_text = "Destination directory: " + folder_name
     self.lbl_dest.configure(text = dest_text)
+    self.btn_copy.configure(state = ACTIVE)
     
 
 def get_folder(folder):    
@@ -83,9 +96,11 @@ def copy_file(self):
             shutil.copy(path, dst)
             self.lst_dest.insert(END, file)
             # print(dst)
+    self.btn_copy.configure(state = DISABLED)
     
 
 def clear_box(self):
+    self.btn_copy.configure(state = DISABLED)
     self.lst_origin.delete(0, END)
     self.lst_dest.delete(0, END)
     self.lbl_origin.configure(text = "Origin directory: ")
