@@ -64,7 +64,7 @@ def open_file(self):
         or_text = "Origin directory: " + folder_name
         self.lbl_origin.configure(text = or_text)
         get_data = get_db(self)
-        print(get_data)
+        
         files = get_files(src_folder, get_data)
         if(len(files) == 0):
             self.lst_origin.insert(END, "No new or modified files")
@@ -74,7 +74,7 @@ def open_file(self):
         
 
 def dest_file(self):
-     # This function runs when user clicks the Open Destination button.
+    # This function runs when user clicks the Open Destination button.
      
     global dest_folder
     
@@ -96,25 +96,16 @@ def get_folder(folder):
 
 
 def get_files(folder, time):
-    # Figuring out the time 24 hours ago.
-    time_24hours_ago = datetime.today()-time
-    print(time, time_24hours_ago)
-    files = os.listdir(src_folder)
-    
+    # Getting the files from selected folder.
+    files = os.listdir(src_folder)    
     c_files = []
     for file in files:
-        path = src_folder+'/'+file
-        #path = os.path.join(src_folder, file)
-        #dst = os.path.join(dest_folder, file)
-        
+        path = src_folder+'/'+file      
 
         # getting the modified time of the file.
         m_time = os.path.getmtime(path)
-        print(m_time, datetime.fromtimestamp(m_time))
-
         # checking if file is recently created or edited.
         if datetime.fromtimestamp(m_time) > time:
-            # print(datetime.now()- datetime.fromtimestamp(m_time))
             # copying the file.
             c_files.append(file)
     return c_files
@@ -135,12 +126,13 @@ def copy_file(self):
     for file in files:
         path = os.path.join(src_folder, file)
         dst = os.path.join(dest_folder, file)
-        shutil.copy(path, dst)
-        data.append([time_id, file])
-        #self.lst_dest.insert(END, file)
-        # print(dst)
+        if path == dst:
+            messagebox.showwarning("Invalid Selection", "Origin and Destination folders are the same! \nPlease pick a valid directory.")
+        else:
+            shutil.copy(path, dst)
+            data.append([time_id, file])
+        
     self.btn_copy.configure(state = DISABLED)
-    print(data)
     insert_db(data)
     get_db(self)
     
@@ -165,6 +157,7 @@ def close_window(self):
 
 
 def create_db():
+    # Creting the database if it is not already exists.
     conn = sqlite3.connect('copyfiles.db')
     with conn:
         cur = conn.cursor()
@@ -173,11 +166,20 @@ def create_db():
                    col_timeid INTEGER, \
                    col_filename TEXT);")
         conn.commit()
+        # Checking to see if the database is empty. If so, putting some initial data in it.
+        cur.execute("""SELECT * FROM tbl_savetime""")
+    
+        count = cur.fetchall()
+        if not count:
+            time_id = round(datetime.today().timestamp())
+            cur.execute("""INSERT INTO tbl_savetime (col_timeid, col_filename)
+                                VALUES (?,?)""",(time_id, "No Files"))
+            conn.commit()
     conn.close()
 
 
 def insert_db(data):
-
+    # Inserting the copied filenames and the timestamp in the database.
     conn = sqlite3.connect('copyfiles.db')
     with conn:
         cur = conn.cursor()
@@ -189,30 +191,32 @@ def insert_db(data):
 
 
 def get_db(self):
-
+    # Getting the last updated time and the files updated from the database.
     conn = sqlite3.connect('copyfiles.db')
     cur = conn.cursor()
     cur.execute("""SELECT MAX(ID) AS ID, col_timeid, col_filename FROM tbl_savetime""")
-    r_data = cur.fetchall()
+    r_data = cur.fetchall()    
+    updated_time = r_data[0][1]
     
-    s = r_data[0][1]
-    if s == None:
+    if updated_time == None:
         self.lst_dest.insert(END, "No files copied yet!")
     else:
-        st = datetime.fromtimestamp(s)
-        date = st.strftime('%B %d, %Y')
-        time = st.strftime('%I:%M%p')
+        r_time = datetime.fromtimestamp(updated_time)
+        date = r_time.strftime('%B %d, %Y')
+        time = r_time.strftime('%I:%M%p')
         self.lst_dest.insert(1, "Last file check: ")
         self.lst_dest.insert(2, "Date:  {}".format(date))
         self.lst_dest.insert(3, "Time:  {}".format(time))
         self.lst_dest.insert(4, "Files updated: ")
-        #self.lst_dest.insert(END, "Last update: \nDate: {}\nTime:{}".format(date, time))
+        
         cur.execute("""SELECT col_filename FROM tbl_savetime WHERE col_timeid ={id}""".format(
-                                                                                        id = r_data[0][1]))
+                                                                                        id = updated_time))
         c_data = cur.fetchall()
         
         [self.lst_dest.insert(5, item[0]) for item in c_data]
-    return st
+    conn.close()
+    # returning the timestamp of the last check.
+    return r_time
        
 
 
