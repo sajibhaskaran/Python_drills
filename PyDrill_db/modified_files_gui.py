@@ -52,7 +52,8 @@ def open_file(self):
     # Sets up global variable so the filedialog doesn't need to be called
     # multiple times.
     global src_folder
-    #self.lst_origin.delete(0, END)
+
+    # Clearing the list box.
     clear_box(self)
     src_folder = filedialog.askdirectory()
     if src_folder == '':
@@ -62,10 +63,14 @@ def open_file(self):
         folder_name = get_folder(src_folder)
         or_text = "Origin directory: " + folder_name
         self.lbl_origin.configure(text = or_text)
-        files = get_files(src_folder)
-        # print(files)
-        # Iterating through the files and lists ones that modified recently.
-        [self.lst_origin.insert(END, file) for file in files]
+        get_data = get_db(self)
+        print(get_data)
+        files = get_files(src_folder, get_data)
+        if(len(files) == 0):
+            self.lst_origin.insert(END, "No new or modified files")
+        else:
+            # Iterating through the files and lists ones that modified recently.
+            [self.lst_origin.insert(END, file) for file in files]
         
 
 def dest_file(self):
@@ -90,8 +95,10 @@ def get_folder(folder):
     return str(listA[0])+"/.../"+str(listA[len(listA)-1])
 
 
-def get_files(folder):
-    time_24hours_ago = datetime.today()-timedelta(hours = 24)
+def get_files(folder, time):
+    # Figuring out the time 24 hours ago.
+    time_24hours_ago = datetime.today()-time
+    print(time, time_24hours_ago)
     files = os.listdir(src_folder)
     
     c_files = []
@@ -99,14 +106,14 @@ def get_files(folder):
         path = src_folder+'/'+file
         #path = os.path.join(src_folder, file)
         #dst = os.path.join(dest_folder, file)
-        print(path)
+        
 
         # getting the modified time of the file.
         m_time = os.path.getmtime(path)
-        
+        print(m_time, datetime.fromtimestamp(m_time))
 
         # checking if file is recently created or edited.
-        if datetime.fromtimestamp(m_time) > time_24hours_ago:
+        if datetime.fromtimestamp(m_time) > time:
             # print(datetime.now()- datetime.fromtimestamp(m_time))
             # copying the file.
             c_files.append(file)
@@ -121,7 +128,10 @@ def copy_file(self):
     
     data = []
     time_id = round(datetime.today().timestamp())
-    files = get_files(src_folder)
+    get_data = get_db(self)
+    files = get_files(src_folder, get_data)
+    # Clearing the list box.
+    clear_box(self)
     for file in files:
         path = os.path.join(src_folder, file)
         dst = os.path.join(dest_folder, file)
@@ -184,7 +194,7 @@ def get_db(self):
     cur = conn.cursor()
     cur.execute("""SELECT MAX(ID) AS ID, col_timeid, col_filename FROM tbl_savetime""")
     r_data = cur.fetchall()
-    print(r_data)
+    
     s = r_data[0][1]
     if s == None:
         self.lst_dest.insert(END, "No files copied yet!")
@@ -200,8 +210,9 @@ def get_db(self):
         cur.execute("""SELECT col_filename FROM tbl_savetime WHERE col_timeid ={id}""".format(
                                                                                         id = r_data[0][1]))
         c_data = cur.fetchall()
-        print(c_data)
+        
         [self.lst_dest.insert(5, item[0]) for item in c_data]
+    return st
        
 
 
