@@ -2,14 +2,15 @@ import os, shutil
 from datetime import datetime, timedelta
 from tkinter import *
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 import sqlite3
 
 
 
 def load_gui(self):
 
-    create_db()
+    
+    
     # GUI set up using tkinter.
     
     self.lbl_origin = tk.Label(self.master, bg = "silver", text = "Origin directory: ")
@@ -38,6 +39,11 @@ def load_gui(self):
     self.btn_close = tk.Button(self.master, width = 25, height = 2, text = "Close",
                                command = lambda: close_window(self))
     self.btn_close.grid( row = 3, column = 1, padx = (20,20), pady = (100,0), sticky = N+E)
+    create_db()
+    get_db(self)
+
+
+    
 
 
 
@@ -52,13 +58,14 @@ def open_file(self):
     if src_folder == '':
         messagebox.showwarning("Invalid Selection", "Please pick a valid directory.")
         src_folder = filedialog.askdirectory()
-    folder_name = get_folder(src_folder)
-    or_text = "Origin directory: " + folder_name
-    self.lbl_origin.configure(text = or_text)
-    files = os.listdir(src_folder)
-    # print(files)
-    # Iterating through the files and lists ones that modified recently.
-    [self.lst_origin.insert(END, file) for file in files]
+    else:
+        folder_name = get_folder(src_folder)
+        or_text = "Origin directory: " + folder_name
+        self.lbl_origin.configure(text = or_text)
+        files = get_files(src_folder)
+        # print(files)
+        # Iterating through the files and lists ones that modified recently.
+        [self.lst_origin.insert(END, file) for file in files]
         
 
 def dest_file(self):
@@ -81,22 +88,18 @@ def get_folder(folder):
     # A helper function to get the selected folder name.
     listA = folder.split('/')
     return str(listA[0])+"/.../"+str(listA[len(listA)-1])
-    
-    
 
 
-def copy_file(self):
-    
-    # finding out the time 24 hours ago.
+def get_files(folder):
     time_24hours_ago = datetime.today()-timedelta(hours = 24)
     files = os.listdir(src_folder)
-    curr_time = datetime.now()
-    data = []
     
+    c_files = []
     for file in files:
-        path = os.path.join(src_folder, file)
-        dst = os.path.join(dest_folder, file)
-        # print(path)
+        path = src_folder+'/'+file
+        #path = os.path.join(src_folder, file)
+        #dst = os.path.join(dest_folder, file)
+        print(path)
 
         # getting the modified time of the file.
         m_time = os.path.getmtime(path)
@@ -104,15 +107,32 @@ def copy_file(self):
 
         # checking if file is recently created or edited.
         if datetime.fromtimestamp(m_time) > time_24hours_ago:
-            print(datetime.now()- datetime.fromtimestamp(m_time))
+            # print(datetime.now()- datetime.fromtimestamp(m_time))
             # copying the file.
-            shutil.copy(path, dst)
-            data.append([file, curr_time])
-            self.lst_dest.insert(END, file)
-            # print(dst)
+            c_files.append(file)
+    return c_files
+    
+    
+
+
+def copy_file(self):
+    
+    # finding out the time 24 hours ago.
+    
+    data = []
+    time_id = round(datetime.today().timestamp())
+    files = get_files(src_folder)
+    for file in files:
+        path = os.path.join(src_folder, file)
+        dst = os.path.join(dest_folder, file)
+        shutil.copy(path, dst)
+        data.append([time_id, file])
+        #self.lst_dest.insert(END, file)
+        # print(dst)
     self.btn_copy.configure(state = DISABLED)
     print(data)
     insert_db(data)
+    get_db(self)
     
 
 def clear_box(self):
@@ -140,8 +160,8 @@ def create_db():
         cur = conn.cursor()
         cur.execute("CREATE TABLE if not exists tbl_savetime(\
                    ID INTEGER PRIMARY KEY AUTOINCREMENT, \
-                   col_filename TEXT, \
-                   col_updatetime TIMESTAMP);")
+                   col_timeid INTEGER, \
+                   col_filename TEXT);")
         conn.commit()
     conn.close()
 
@@ -152,11 +172,44 @@ def insert_db(data):
     with conn:
         cur = conn.cursor()
         for item in data:
-            cur.execute("""INSERT INTO tbl_savetime (col_filename, col_updatetime)
+            cur.execute("""INSERT INTO tbl_savetime (col_timeid, col_filename)
                               VALUES (?,?)""", (item[0], item[1]))
             conn.commit()
     conn.close()
 
+
+def get_db(self):
+
+    conn = sqlite3.connect('copyfiles.db')
+    cur = conn.cursor()
+    cur.execute("""SELECT MAX(ID) AS ID, col_timeid, col_filename FROM tbl_savetime""")
+    r_data = cur.fetchall()
+    print(r_data)
+    s = r_data[0][1]
+    if s == None:
+        self.lst_dest.insert(END, "No files copied yet!")
+    else:
+        st = datetime.fromtimestamp(s)
+        date = st.strftime('%B %d, %Y')
+        time = st.strftime('%I:%M%p')
+        self.lst_dest.insert(1, "Last file check: ")
+        self.lst_dest.insert(2, "Date:  {}".format(date))
+        self.lst_dest.insert(3, "Time:  {}".format(time))
+        self.lst_dest.insert(4, "Files updated: ")
+        #self.lst_dest.insert(END, "Last update: \nDate: {}\nTime:{}".format(date, time))
+        cur.execute("""SELECT col_filename FROM tbl_savetime WHERE col_timeid ={id}""".format(
+                                                                                        id = r_data[0][1]))
+        c_data = cur.fetchall()
+        print(c_data)
+        [self.lst_dest.insert(5, item[0]) for item in c_data]
+       
+
+
+    
+    
+        
+    
+    
 
 
 

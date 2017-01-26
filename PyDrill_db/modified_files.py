@@ -25,7 +25,7 @@ class AppWindow:
         helv36 = font.Font(family='Helvetica', size=36, weight='bold')
         self.master = master
         self.master.minsize(500, 400)
-        self.master.maxsize(500, 400)
+        self.master.maxsize(600, 450)
 
         self.master.title("Move Files")
         self.master.configure(bg = "silver")
