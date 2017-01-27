@@ -55,6 +55,7 @@ def open_file(self):
 
     # Clearing the list box.
     clear_box(self)
+    create_db()
     src_folder = filedialog.askdirectory()
     if src_folder == '':
         messagebox.showwarning("Invalid Selection", "Please pick a valid directory.")
@@ -105,7 +106,10 @@ def get_files(folder, time):
         # getting the modified time of the file.
         m_time = os.path.getmtime(path)
         # checking if file is recently created or edited.
-        if datetime.fromtimestamp(m_time) > time:
+        if time == 0:
+            c_files.append(file)
+            
+        elif datetime.fromtimestamp(m_time) > time:
             # copying the file.
             c_files.append(file)
     return c_files
@@ -166,15 +170,7 @@ def create_db():
                    col_timeid INTEGER, \
                    col_filename TEXT);")
         conn.commit()
-        # Checking to see if the database is empty. If so, putting some initial data in it.
-        cur.execute("""SELECT * FROM tbl_savetime""")
-    
-        count = cur.fetchall()
-        if not count:
-            time_id = round(datetime.today().timestamp())
-            cur.execute("""INSERT INTO tbl_savetime (col_timeid, col_filename)
-                                VALUES (?,?)""",(time_id, "No Files"))
-            conn.commit()
+        
     conn.close()
 
 
@@ -200,6 +196,8 @@ def get_db(self):
     
     if updated_time == None:
         self.lst_dest.insert(END, "No files copied yet!")
+        #r_time = round(datetime.today().timestamp())
+        r_time = 0
     else:
         r_time = datetime.fromtimestamp(updated_time)
         date = r_time.strftime('%B %d, %Y')
